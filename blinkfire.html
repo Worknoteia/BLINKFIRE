@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REFLEX — Test tes réflexes</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0eff4;
+    --muted: #6b6a78;
+    --accent: #c8f135;
+    --accent2: #5b5ff5;
+    --red: #f13535;
+    --orange: #f18035;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% 20%, rgba(91,95,245,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 85% 80%, rgba(200,241,53,0.07) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── Arena ── */
+  #arena {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: crosshair;
+    user-select: none;
+  }
+
+  /* grid lines */
+  #arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* miss flash */
+  #miss-flash {
+    position: absolute;
+    inset: 0;
+    background: var(--red);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 16px;
+    transition: opacity 0.08s;
+  }
+
+  /* hit flash */
+  #hit-flash {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 16px;
+    transition: opacity 0.08s;
+  }
+
+  /* ── Target ── */
+  .target {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.08s;
+    will-change: transform;
+  }
+
+  .target:active { transform: scale(0.88) !important; }
+
+  .target::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.25);
+  }
+
+  /* ── Timer bar ── */
+  #timer-track {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  #timer-fill {
+    height: 3px;
+    width: 100%;
+    background: var(--accent);
+    transform-origin: left;
+    will-change: width;
+  }
+
+  /* ── Overlay ── */
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    transition: opacity 0.3s;
+  }
+
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .overlay-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+    text-align: center;
+  }
+
+  .overlay-sub {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  #btn-start {
+    margin-top: 8px;
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #0a0a0f;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+
+  #btn-start:hover { opacity: 0.88; transform: scale(1.03); }
+  #btn-start:active { transform: scale(0.97); }
+
+  /* ── HUD ── */
+  .hud {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .hud-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .hud-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .hud-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .hud-val.accent { color: var(--accent); }
+  .hud-val.dim    { color: var(--muted); }
+
+  /* ── Combo pop ── */
+  .combo-pop {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    pointer-events: none;
+    animation: popup 0.7s ease forwards;
+    white-space: nowrap;
+    text-shadow: 0 0 12px rgba(200,241,53,0.6);
+  }
+
+  @keyframes popup {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    60%  { opacity: 1; transform: translateY(-18px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-36px) scale(0.9); }
+  }
+
+  /* ── Pulse ring on spawn ── */
+  .pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: pulseOut 0.5s ease forwards;
+  }
+
+  @keyframes pulseOut {
+    0%   { opacity: 0.7; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.8); }
+  }
+
+  /* ── Combo streak badge ── */
+  #combo-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(200,241,53,0.12);
+    border: 1px solid rgba(200,241,53,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    display: none;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Scan line effect ── */
+  #arena::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    border-radius: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">REFL<span>EX</span></div>
+    <div class="tagline">Test de réflexes</div>
+  </header>
+
+  <div id="arena">
+    <div id="hit-flash"></div>
+    <div id="miss-flash"></div>
+
+    <div id="combo-badge">x1 COMBO</div>
+
+    <div id="overlay">
+      <div class="overlay-title" id="overlay-title">REFLEX</div>
+      <div class="overlay-sub" id="overlay-sub">
+        Clique sur les cibles le plus vite possible.<br>
+        Plus tu es rapide → plus tu marques de points.
+      </div>
+      <button id="btn-start">Démarrer</button>
+    </div>
+
+    <div id="timer-track"><div id="timer-fill"></div></div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-card">
+      <div class="hud-label">Score</div>
+      <div class="hud-val accent" id="val-score">0</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Combo</div>
+      <div class="hud-val" id="val-combo">x1</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Meilleur temps</div>
+      <div class="hud-val dim" id="val-best">—</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Temps restant</div>
+      <div class="hud-val" id="val-time">30</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const arena      = document.getElementById('arena');
+const overlay    = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const overlaySub   = document.getElementById('overlay-sub');
+const btnStart   = document.getElementById('btn-start');
+const hitFlash   = document.getElementById('hit-flash');
+const missFlash  = document.getElementById('miss-flash');
+const timerFill  = document.getElementById('timer-fill');
+const comboBadge = document.getElementById('combo-badge');
+
+const valScore = document.getElementById('val-score');
+const valCombo = document.getElementById('val-combo');
+const valBest  = document.getElementById('val-best');
+const valTime  = document.getElementById('val-time');
+
+const DURATION = 30;
+const TARGET_COLORS = [
+  '#5b5ff5', '#c8f135', '#f13535', '#f18035',
+  '#35c8f1', '#f135c8', '#35f18e'
+];
+
+let score = 0, combo = 1, bestMs = Infinity;
+let running = false, timeLeft = DURATION;
+let currentTarget = null, spawnTime = 0;
+let rafId = null, startTs = 0;
+
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+function spawnTarget() {
+  if (currentTarget) { currentTarget.remove(); currentTarget = null; }
+
+  const size = randInt(40, 76);
+  const pad  = 10;
+  const maxX = arena.clientWidth  - size - pad;
+  const maxY = arena.clientHeight - size - pad - 6;
+  const x = Math.round(rand(pad, maxX));
+  const y = Math.round(rand(pad, maxY));
+
+  const color = TARGET_COLORS[randInt(0, TARGET_COLORS.length - 1)];
+
+  const t = document.createElement('div');
+  t.className = 'target';
+  t.style.cssText = `
+    width:${size}px; height:${size}px;
+    left:${x}px; top:${y}px;
+    background:${color};
+    box-shadow: 0 0 20px ${color}55, 0 0 40px ${color}22;
+  `;
+
+  /* pulse ring */
+  const ring = document.createElement('div');
+  ring.className = 'pulse-ring';
+  ring.style.cssText = `
+    width:${size}px; height:${size}px;
+    left:${x}px; top:${y}px;
+  `;
+  arena.appendChild(ring);
+  ring.addEventListener('animationend', () => ring.remove());
+
+  t.addEventListener('click', onHit);
+  arena.appendChild(t);
+  currentTarget = t;
+  spawnTime = performance.now();
+}
+
+function onHit(e) {
+  if (!running) return;
+  const ms  = Math.round(performance.now() - spawnTime);
+  if (ms < bestMs) { bestMs = ms; valBest.textContent = ms + ' ms'; }
+
+  /* points: vitesse × combo */
+  const speed  = Math.max(0, 800 - ms);
+  const pts    = Math.max(1, Math.round(speed / 80)) * combo;
+  score += pts;
+  valScore.textContent = score;
+
+  combo = Math.min(combo + 1, 10);
+  valCombo.textContent = 'x' + combo;
+  comboBadge.textContent = 'x' + combo + ' COMBO';
+  comboBadge.style.display = combo >= 3 ? 'block' : 'none';
+
+  showPop(e.clientX, e.clientY, '+' + pts, combo >= 5);
+  doFlash(hitFlash);
+  spawnTarget();
+}
+
+/* miss (clic hors cible) */
+arena.addEventListener('click', (e) => {
+  if (!running) return;
+  if (e.target !== arena && !e.target.classList.contains('target')) return;
+  if (e.target.classList.contains('target')) return;
+  combo = 1;
+  valCombo.textContent = 'x1';
+  comboBadge.style.display = 'none';
+  doFlash(missFlash);
+});
+
+function doFlash(el) {
+  el.style.opacity = '0.18';
+  setTimeout(() => { el.style.opacity = '0'; }, 90);
+}
+
+function showPop(cx, cy, text, big) {
+  const rect = arena.getBoundingClientRect();
+  const pop  = document.createElement('div');
+  pop.className = 'combo-pop';
+  pop.textContent = text;
+  if (big) pop.style.fontSize = '18px';
+  pop.style.left = (cx - rect.left - 20) + 'px';
+  pop.style.top  = (cy - rect.top  - 20) + 'px';
+  arena.appendChild(pop);
+  pop.addEventListener('animationend', () => pop.remove());
+}
+
+function startGame() {
+  score = 0; combo = 1; timeLeft = DURATION; bestMs = Infinity;
+  valScore.textContent = '0';
+  valCombo.textContent = 'x1';
+  valBest.textContent  = '—';
+  valTime.textContent  = DURATION;
+  comboBadge.style.display = 'none';
+
+  overlay.classList.add('hidden');
+  running = true;
+  btnStart.disabled = true;
+
+  timerFill.style.background = '#c8f135';
+  timerFill.style.width = '100%';
+
+  spawnTarget();
+
+  startTs = performance.now();
+  function tick(now) {
+    const elapsed = (now - startTs) / 1000;
+    timeLeft = Math.max(0, DURATION - elapsed);
+    const pct = (timeLeft / DURATION) * 100;
+
+    valTime.textContent = Math.ceil(timeLeft);
+    timerFill.style.width = pct + '%';
+    timerFill.style.background = pct > 40 ? '#c8f135' : pct > 20 ? '#f18035' : '#f13535';
+
+    if (timeLeft <= 0) { endGame(); }
+    else { rafId = requestAnimationFrame(tick); }
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function endGame() {
+  running = false;
+  cancelAnimationFrame(rafId);
+  if (currentTarget) { currentTarget.remove(); currentTarget = null; }
+  comboBadge.style.display = 'none';
+  timerFill.style.width = '0%';
+
+  const grade =
+    score >= 1000 ? '🏆 LÉGENDAIRE' :
+    score >= 600  ? '⚡ EXCELLENT'   :
+    score >= 300  ? '🎯 BIEN JOUÉ'   :
+                    '👀 CONTINUE !';
+
+  overlayTitle.textContent = grade;
+  overlaySub.innerHTML =
+    `<strong style="color:#f0eff4;font-size:32px;font-family:'Space Mono',monospace">${score} pts</strong><br><br>` +
+    (bestMs < Infinity ? `Meilleur temps : <strong style="color:#c8f135">${bestMs} ms</strong><br>` : '') +
+    `<span style="opacity:.5;font-size:12px">Clique pour rejouer</span>`;
+
+  btnStart.textContent = 'Rejouer';
+  btnStart.disabled = false;
+  overlay.classList.remove('hidden');
+}
+
+btnStart.addEventListener('click', startGame);
+</script>
+</body>
+</html>
