@@ -3,34 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REFLEX — Test tes réflexes</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<title>BLINKFIRE — Reflex Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --border: rgba(255,255,255,0.07);
-    --text: #f0eff4;
-    --muted: #6b6a78;
-    --accent: #c8f135;
-    --accent2: #5b5ff5;
-    --red: #f13535;
-    --orange: #f18035;
+    --bg: #07070f;
+    --surface: #0f0f1c;
+    --border: rgba(255,255,255,0.06);
+    --text: #eeedf8;
+    --muted: #5a5970;
+    --accent: #b8ff3c;
+    --accent2: #6c63ff;
+    --red: #ff3c3c;
+    --orange: #ff8f3c;
+    --cyan: #3cf0ff;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
+  html, body {
+    height: 100%;
     background: var(--bg);
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  /* animated bg particles */
+  #particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
     overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: drift linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes drift {
+    0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-120vh) scale(1.2); }
   }
 
   body::before {
@@ -38,8 +65,9 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse 60% 40% at 15% 20%, rgba(91,95,245,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 35% at 85% 80%, rgba(200,241,53,0.07) 0%, transparent 60%);
+      radial-gradient(ellipse 55% 40% at 10% 15%, rgba(108,99,255,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 35% at 90% 85%, rgba(184,255,60,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(60,240,255,0.05) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -48,119 +76,204 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 720px;
+    max-width: 740px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   /* ── Header ── */
   header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
   }
 
   .logo {
     font-family: 'Space Mono', monospace;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
-    letter-spacing: -0.5px;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .logo span { color: var(--accent); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
   .tagline {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
     font-family: 'Space Mono', monospace;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-transform: uppercase;
   }
+
+  /* mute button */
+  #btn-mute {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  #btn-mute:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+  #btn-mute.muted { color: var(--red); }
 
   /* ── Arena ── */
   #arena {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: 390px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 18px;
     overflow: hidden;
     cursor: crosshair;
     user-select: none;
   }
 
-  /* grid lines */
   #arena::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 48px 48px;
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 50px 50px;
     pointer-events: none;
+    z-index: 0;
   }
 
-  /* miss flash */
-  #miss-flash {
+  /* scanlines */
+  #arena::after {
+    content: '';
     position: absolute;
     inset: 0;
-    background: var(--red);
-    opacity: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+    );
     pointer-events: none;
-    border-radius: 16px;
-    transition: opacity 0.08s;
+    z-index: 10;
+    border-radius: 18px;
   }
 
-  /* hit flash */
-  #hit-flash {
+  /* ── Flashes ── */
+  .flash {
     position: absolute;
     inset: 0;
-    background: var(--accent);
     opacity: 0;
     pointer-events: none;
-    border-radius: 16px;
-    transition: opacity 0.08s;
+    border-radius: 18px;
+    z-index: 5;
+    transition: opacity 0.06s;
   }
+
+  #hit-flash  { background: var(--accent); }
+  #miss-flash { background: var(--red); }
 
   /* ── Target ── */
   .target {
     position: absolute;
     border-radius: 50%;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.08s;
+    z-index: 2;
     will-change: transform;
+    animation: targetIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
-  .target:active { transform: scale(0.88) !important; }
+  @keyframes targetIn {
+    0%   { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .target::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    opacity: 0.3;
+    animation: ringPulse 0.8s ease-out infinite;
+  }
 
   .target::after {
     content: '';
     position: absolute;
-    inset: 4px;
+    inset: 5px;
     border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.15);
   }
+
+  @keyframes ringPulse {
+    0%   { transform: scale(1); opacity: 0.3; }
+    50%  { transform: scale(1.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
+  }
+
+  /* shrink over time */
+  .target.shrinking {
+    animation: targetIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               shrink 2.5s 0.15s linear forwards;
+  }
+
+  @keyframes shrink {
+    0%   { filter: brightness(1); }
+    70%  { filter: brightness(1); }
+    100% { filter: brightness(0.4); transform: scale(0.6); }
+  }
+
+  /* ── Combo badge ── */
+  #combo-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(184,255,60,0.12);
+    border: 1px solid rgba(184,255,60,0.3);
+    color: var(--accent);
+    z-index: 6;
+    display: none;
+    animation: badgePop 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes badgePop { 0% { transform: scale(0.7); } 100% { transform: scale(1); } }
 
   /* ── Timer bar ── */
   #timer-track {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 3px;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.04);
+    z-index: 6;
   }
 
   #timer-fill {
     height: 3px;
     width: 100%;
     background: var(--accent);
-    transform-origin: left;
     will-change: width;
+    transition: background 0.5s;
   }
 
   /* ── Overlay ── */
@@ -171,49 +284,93 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(4px);
-    border-radius: 16px;
+    gap: 10px;
+    background: rgba(7,7,15,0.88);
+    backdrop-filter: blur(6px);
+    border-radius: 18px;
+    z-index: 9;
     transition: opacity 0.3s;
   }
 
   #overlay.hidden { opacity: 0; pointer-events: none; }
 
+  .overlay-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+
   .overlay-title {
     font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: -1px;
-    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
   }
 
   .overlay-sub {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--muted);
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.8;
+    margin-top: 4px;
   }
 
   #btn-start {
-    margin-top: 8px;
-    padding: 12px 32px;
+    margin-top: 12px;
+    padding: 13px 36px;
     background: var(--accent);
-    color: #0a0a0f;
+    color: #07070f;
     font-family: 'Space Mono', monospace;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.1s, opacity 0.1s;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 0 24px rgba(184,255,60,0.3);
   }
 
-  #btn-start:hover { opacity: 0.88; transform: scale(1.03); }
+  #btn-start:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 36px rgba(184,255,60,0.45);
+  }
+
   #btn-start:active { transform: scale(0.97); }
+
+  /* ── Score pop ── */
+  .score-pop {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    pointer-events: none;
+    z-index: 8;
+    text-shadow: 0 0 10px rgba(184,255,60,0.7);
+    animation: popUp 0.75s ease forwards;
+    white-space: nowrap;
+  }
+
+  .score-pop.big {
+    font-size: 20px;
+    color: var(--cyan);
+    text-shadow: 0 0 14px rgba(60,240,255,0.8);
+  }
+
+  @keyframes popUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    50%  { opacity: 1; transform: translateY(-22px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-44px) scale(0.85); }
+  }
 
   /* ── HUD ── */
   .hud {
@@ -226,131 +383,80 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
+    transition: border-color 0.2s;
+  }
+
+  .hud-card.pulse-card {
+    animation: cardPulse 0.3s ease;
+  }
+
+  @keyframes cardPulse {
+    0%   { border-color: var(--accent); }
+    100% { border-color: var(--border); }
   }
 
   .hud-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--muted);
     font-family: 'Space Mono', monospace;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     text-transform: uppercase;
   }
 
   .hud-val {
     font-family: 'Space Mono', monospace;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text);
     line-height: 1;
+    transition: color 0.2s;
   }
 
   .hud-val.accent { color: var(--accent); }
   .hud-val.dim    { color: var(--muted); }
-
-  /* ── Combo pop ── */
-  .combo-pop {
-    position: absolute;
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    pointer-events: none;
-    animation: popup 0.7s ease forwards;
-    white-space: nowrap;
-    text-shadow: 0 0 12px rgba(200,241,53,0.6);
-  }
-
-  @keyframes popup {
-    0%   { opacity: 1; transform: translateY(0) scale(1); }
-    60%  { opacity: 1; transform: translateY(-18px) scale(1.15); }
-    100% { opacity: 0; transform: translateY(-36px) scale(0.9); }
-  }
-
-  /* ── Pulse ring on spawn ── */
-  .pulse-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 2px solid var(--accent);
-    opacity: 0;
-    pointer-events: none;
-    animation: pulseOut 0.5s ease forwards;
-  }
-
-  @keyframes pulseOut {
-    0%   { opacity: 0.7; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.8); }
-  }
-
-  /* ── Combo streak badge ── */
-  #combo-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(200,241,53,0.12);
-    border: 1px solid rgba(200,241,53,0.3);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    display: none;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── Scan line effect ── */
-  #arena::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(0,0,0,0.04) 3px,
-      rgba(0,0,0,0.04) 4px
-    );
-    pointer-events: none;
-    border-radius: 16px;
-  }
+  .hud-val.danger { color: var(--red); }
 </style>
 </head>
 <body>
 
+<div id="particles"></div>
+
 <div class="container">
   <header>
-    <div class="logo">REFL<span>EX</span></div>
-    <div class="tagline">Test de réflexes</div>
+    <div class="logo">BLINKFIRE</div>
+    <div class="header-right">
+      <div class="tagline">Reflex Game</div>
+      <button id="btn-mute" title="Mute/Unmute">🔊</button>
+    </div>
   </header>
 
   <div id="arena">
-    <div id="hit-flash"></div>
-    <div id="miss-flash"></div>
-
-    <div id="combo-badge">x1 COMBO</div>
+    <div class="flash" id="hit-flash"></div>
+    <div class="flash" id="miss-flash"></div>
+    <div id="combo-badge">🔥 x1 COMBO</div>
+    <div id="timer-track"><div id="timer-fill"></div></div>
 
     <div id="overlay">
-      <div class="overlay-title" id="overlay-title">REFLEX</div>
+      <div class="overlay-logo">BLINKFIRE</div>
+      <div class="overlay-title" id="overlay-title">Teste tes réflexes</div>
       <div class="overlay-sub" id="overlay-sub">
-        Clique sur les cibles le plus vite possible.<br>
-        Plus tu es rapide → plus tu marques de points.
+        Clique les cibles avant qu'elles disparaissent.<br>
+        Vitesse + combo = score maximal.
       </div>
-      <button id="btn-start">Démarrer</button>
+      <button id="btn-start">▶ &nbsp;Démarrer</button>
     </div>
-
-    <div id="timer-track"><div id="timer-fill"></div></div>
   </div>
 
   <div class="hud">
-    <div class="hud-card">
+    <div class="hud-card" id="card-score">
       <div class="hud-label">Score</div>
       <div class="hud-val accent" id="val-score">0</div>
     </div>
-    <div class="hud-card">
+    <div class="hud-card" id="card-combo">
       <div class="hud-label">Combo</div>
       <div class="hud-val" id="val-combo">x1</div>
     </div>
@@ -358,7 +464,7 @@
       <div class="hud-label">Meilleur temps</div>
       <div class="hud-val dim" id="val-best">—</div>
     </div>
-    <div class="hud-card">
+    <div class="hud-card" id="card-time">
       <div class="hud-label">Temps restant</div>
       <div class="hud-val" id="val-time">30</div>
     </div>
@@ -366,136 +472,316 @@
 </div>
 
 <script>
-const arena      = document.getElementById('arena');
-const overlay    = document.getElementById('overlay');
+/* ───────────────────────────────────────────
+   WEB AUDIO ENGINE
+─────────────────────────────────────────── */
+let audioCtx = null;
+let muted = false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playHit(combo) {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+
+  /* synth principale */
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const freq = 440 + (combo - 1) * 55;
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.08);
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + 0.2);
+
+  /* harmonic */
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'triangle';
+  osc2.frequency.setValueAtTime(freq * 2, now);
+  g2.gain.setValueAtTime(0.12, now);
+  g2.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc2.connect(g2); g2.connect(ctx.destination);
+  osc2.start(now); osc2.stop(now + 0.15);
+}
+
+function playComboBreak() {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(220, now);
+  osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + 0.25);
+}
+
+function playComboMilestone() {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [0, 0.08, 0.16].forEach((delay, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime([523, 659, 784][i], now + delay);
+    g.gain.setValueAtTime(0.22, now + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.18);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + delay); osc.stop(now + delay + 0.2);
+  });
+}
+
+function playGameOver() {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [0, 0.12, 0.24, 0.4].forEach((delay, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    const freqs = [440, 392, 349, 262];
+    osc.frequency.setValueAtTime(freqs[i], now + delay);
+    g.gain.setValueAtTime(0.25, now + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.22);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + delay); osc.stop(now + delay + 0.25);
+  });
+}
+
+function playStart() {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [0, 0.1, 0.2].forEach((delay, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime([330, 440, 660][i], now + delay);
+    g.gain.setValueAtTime(0.2, now + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + delay); osc.stop(now + delay + 0.18);
+  });
+}
+
+function playTickSound() {
+  if (muted) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(880, now);
+  g.gain.setValueAtTime(0.06, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(now); osc.stop(now + 0.06);
+}
+
+/* ───────────────────────────────────────────
+   PARTICLES
+─────────────────────────────────────────── */
+const particlesEl = document.getElementById('particles');
+const PARTICLE_COLORS = ['#b8ff3c', '#6c63ff', '#3cf0ff', '#ff3c3c'];
+
+function createParticles() {
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3 + 1.5;
+    const color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100 + 20}%;
+      background:${color};
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*8}s;
+      box-shadow: 0 0 ${size*2}px ${color};
+    `;
+    particlesEl.appendChild(p);
+  }
+}
+createParticles();
+
+/* ───────────────────────────────────────────
+   GAME
+─────────────────────────────────────────── */
+const arena       = document.getElementById('arena');
+const overlay     = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
-const overlaySub   = document.getElementById('overlay-sub');
-const btnStart   = document.getElementById('btn-start');
-const hitFlash   = document.getElementById('hit-flash');
-const missFlash  = document.getElementById('miss-flash');
-const timerFill  = document.getElementById('timer-fill');
-const comboBadge = document.getElementById('combo-badge');
+const overlaySub  = document.getElementById('overlay-sub');
+const btnStart    = document.getElementById('btn-start');
+const btnMute     = document.getElementById('btn-mute');
+const hitFlash    = document.getElementById('hit-flash');
+const missFlash   = document.getElementById('miss-flash');
+const timerFill   = document.getElementById('timer-fill');
+const comboBadge  = document.getElementById('combo-badge');
 
 const valScore = document.getElementById('val-score');
 const valCombo = document.getElementById('val-combo');
 const valBest  = document.getElementById('val-best');
 const valTime  = document.getElementById('val-time');
+const cardScore = document.getElementById('card-score');
+const cardCombo = document.getElementById('card-combo');
+const cardTime  = document.getElementById('card-time');
 
 const DURATION = 30;
 const TARGET_COLORS = [
-  '#5b5ff5', '#c8f135', '#f13535', '#f18035',
-  '#35c8f1', '#f135c8', '#35f18e'
+  { bg: '#6c63ff', glow: 'rgba(108,99,255,0.5)' },
+  { bg: '#b8ff3c', glow: 'rgba(184,255,60,0.5)'  },
+  { bg: '#3cf0ff', glow: 'rgba(60,240,255,0.5)'  },
+  { bg: '#ff3c3c', glow: 'rgba(255,60,60,0.5)'   },
+  { bg: '#ff8f3c', glow: 'rgba(255,143,60,0.5)'  },
+  { bg: '#ff3caa', glow: 'rgba(255,60,170,0.5)'  },
 ];
 
 let score = 0, combo = 1, bestMs = Infinity;
 let running = false, timeLeft = DURATION;
 let currentTarget = null, spawnTime = 0;
 let rafId = null, startTs = 0;
+let lastTickSecond = DURATION;
 
 function rand(min, max) { return Math.random() * (max - min) + min; }
 function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
 
+function pulseCard(card) {
+  card.classList.remove('pulse-card');
+  void card.offsetWidth;
+  card.classList.add('pulse-card');
+}
+
 function spawnTarget() {
   if (currentTarget) { currentTarget.remove(); currentTarget = null; }
 
-  const size = randInt(40, 76);
-  const pad  = 10;
-  const maxX = arena.clientWidth  - size - pad;
-  const maxY = arena.clientHeight - size - pad - 6;
+  const size  = randInt(38, 74);
+  const pad   = 12;
+  const arenaPad = 40;
+  const maxX  = arena.clientWidth  - size - pad;
+  const maxY  = arena.clientHeight - size - pad - 6;
   const x = Math.round(rand(pad, maxX));
-  const y = Math.round(rand(pad, maxY));
+  const y = Math.round(rand(arenaPad, maxY));
 
-  const color = TARGET_COLORS[randInt(0, TARGET_COLORS.length - 1)];
+  const col = TARGET_COLORS[randInt(0, TARGET_COLORS.length - 1)];
 
   const t = document.createElement('div');
-  t.className = 'target';
+  t.className = 'target shrinking';
   t.style.cssText = `
     width:${size}px; height:${size}px;
     left:${x}px; top:${y}px;
-    background:${color};
-    box-shadow: 0 0 20px ${color}55, 0 0 40px ${color}22;
+    background:${col.bg};
+    color:${col.bg};
+    box-shadow: 0 0 18px ${col.glow}, 0 0 36px ${col.glow}44;
   `;
-
-  /* pulse ring */
-  const ring = document.createElement('div');
-  ring.className = 'pulse-ring';
-  ring.style.cssText = `
-    width:${size}px; height:${size}px;
-    left:${x}px; top:${y}px;
-  `;
-  arena.appendChild(ring);
-  ring.addEventListener('animationend', () => ring.remove());
 
   t.addEventListener('click', onHit);
   arena.appendChild(t);
   currentTarget = t;
   spawnTime = performance.now();
+
+  /* auto-miss after 2.8s */
+  t._timeout = setTimeout(() => {
+    if (!running || t !== currentTarget) return;
+    combo = 1;
+    valCombo.textContent = 'x1';
+    comboBadge.style.display = 'none';
+    doFlash(missFlash);
+    playComboBreak();
+    spawnTarget();
+  }, 2800);
 }
 
 function onHit(e) {
   if (!running) return;
-  const ms  = Math.round(performance.now() - spawnTime);
+  clearTimeout(currentTarget._timeout);
+
+  const ms = Math.round(performance.now() - spawnTime);
   if (ms < bestMs) { bestMs = ms; valBest.textContent = ms + ' ms'; }
 
-  /* points: vitesse × combo */
-  const speed  = Math.max(0, 800 - ms);
-  const pts    = Math.max(1, Math.round(speed / 80)) * combo;
+  const speed = Math.max(0, 800 - ms);
+  const pts   = Math.max(1, Math.round(speed / 70)) * combo;
   score += pts;
   valScore.textContent = score;
+  pulseCard(cardScore);
 
-  combo = Math.min(combo + 1, 10);
+  const prevCombo = combo;
+  combo = Math.min(combo + 1, 12);
   valCombo.textContent = 'x' + combo;
-  comboBadge.textContent = 'x' + combo + ' COMBO';
-  comboBadge.style.display = combo >= 3 ? 'block' : 'none';
+  pulseCard(cardCombo);
+
+  if (combo >= 3) {
+    comboBadge.textContent = '🔥 x' + combo + ' COMBO';
+    comboBadge.style.display = 'block';
+  }
+
+  playHit(combo);
+  if (combo > prevCombo && combo % 3 === 0) playComboMilestone();
 
   showPop(e.clientX, e.clientY, '+' + pts, combo >= 5);
   doFlash(hitFlash);
   spawnTarget();
 }
 
-/* miss (clic hors cible) */
+/* miss (clic dans le vide) */
 arena.addEventListener('click', (e) => {
   if (!running) return;
-  if (e.target !== arena && !e.target.classList.contains('target')) return;
-  if (e.target.classList.contains('target')) return;
-  combo = 1;
-  valCombo.textContent = 'x1';
-  comboBadge.style.display = 'none';
-  doFlash(missFlash);
+  if (e.target === arena || e.target.id === 'combo-badge' ||
+      e.target.id === 'timer-track' || e.target.id === 'timer-fill') {
+    combo = 1;
+    valCombo.textContent = 'x1';
+    comboBadge.style.display = 'none';
+    doFlash(missFlash);
+    playComboBreak();
+  }
 });
 
 function doFlash(el) {
-  el.style.opacity = '0.18';
-  setTimeout(() => { el.style.opacity = '0'; }, 90);
+  el.style.opacity = '0.2';
+  setTimeout(() => { el.style.opacity = '0'; }, 80);
 }
 
 function showPop(cx, cy, text, big) {
   const rect = arena.getBoundingClientRect();
   const pop  = document.createElement('div');
-  pop.className = 'combo-pop';
+  pop.className = 'score-pop' + (big ? ' big' : '');
   pop.textContent = text;
-  if (big) pop.style.fontSize = '18px';
-  pop.style.left = (cx - rect.left - 20) + 'px';
+  pop.style.left = (cx - rect.left - 16) + 'px';
   pop.style.top  = (cy - rect.top  - 20) + 'px';
   arena.appendChild(pop);
   pop.addEventListener('animationend', () => pop.remove());
 }
 
 function startGame() {
+  getCtx();
   score = 0; combo = 1; timeLeft = DURATION; bestMs = Infinity;
+  lastTickSecond = DURATION;
   valScore.textContent = '0';
   valCombo.textContent = 'x1';
   valBest.textContent  = '—';
   valTime.textContent  = DURATION;
   comboBadge.style.display = 'none';
+  valTime.closest('.hud-val') && (valTime.className = 'hud-val');
 
   overlay.classList.add('hidden');
   running = true;
   btnStart.disabled = true;
 
-  timerFill.style.background = '#c8f135';
   timerFill.style.width = '100%';
+  timerFill.style.background = 'var(--accent)';
 
+  playStart();
   spawnTarget();
 
   startTs = performance.now();
@@ -503,10 +789,27 @@ function startGame() {
     const elapsed = (now - startTs) / 1000;
     timeLeft = Math.max(0, DURATION - elapsed);
     const pct = (timeLeft / DURATION) * 100;
+    const secs = Math.ceil(timeLeft);
 
-    valTime.textContent = Math.ceil(timeLeft);
+    valTime.textContent = secs;
     timerFill.style.width = pct + '%';
-    timerFill.style.background = pct > 40 ? '#c8f135' : pct > 20 ? '#f18035' : '#f13535';
+
+    if (pct > 40) {
+      timerFill.style.background = 'var(--accent)';
+      valTime.className = 'hud-val';
+    } else if (pct > 20) {
+      timerFill.style.background = 'var(--orange)';
+      valTime.className = 'hud-val';
+    } else {
+      timerFill.style.background = 'var(--red)';
+      valTime.className = 'hud-val danger';
+    }
+
+    /* tick son chaque seconde */
+    if (secs !== lastTickSecond && secs <= 5 && secs > 0) {
+      playTickSound();
+      lastTickSecond = secs;
+    }
 
     if (timeLeft <= 0) { endGame(); }
     else { rafId = requestAnimationFrame(tick); }
@@ -517,26 +820,44 @@ function startGame() {
 function endGame() {
   running = false;
   cancelAnimationFrame(rafId);
-  if (currentTarget) { currentTarget.remove(); currentTarget = null; }
+  if (currentTarget) {
+    clearTimeout(currentTarget._timeout);
+    currentTarget.remove();
+    currentTarget = null;
+  }
   comboBadge.style.display = 'none';
   timerFill.style.width = '0%';
 
+  playGameOver();
+
   const grade =
-    score >= 1000 ? '🏆 LÉGENDAIRE' :
-    score >= 600  ? '⚡ EXCELLENT'   :
-    score >= 300  ? '🎯 BIEN JOUÉ'   :
+    score >= 1200 ? '🧠 LÉGENDAIRE' :
+    score >= 700  ? '⚡ EXCELLENT'   :
+    score >= 350  ? '🎯 BIEN JOUÉ'   :
                     '👀 CONTINUE !';
 
   overlayTitle.textContent = grade;
   overlaySub.innerHTML =
-    `<strong style="color:#f0eff4;font-size:32px;font-family:'Space Mono',monospace">${score} pts</strong><br><br>` +
-    (bestMs < Infinity ? `Meilleur temps : <strong style="color:#c8f135">${bestMs} ms</strong><br>` : '') +
-    `<span style="opacity:.5;font-size:12px">Clique pour rejouer</span>`;
+    `<span style="font-family:'Space Mono',monospace;font-size:34px;font-weight:700;
+     background:linear-gradient(90deg,var(--accent),var(--cyan));
+     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+     background-clip:text;">${score} pts</span><br><br>` +
+    (bestMs < Infinity
+      ? `Meilleur temps : <strong style="color:var(--accent)">${bestMs} ms</strong><br>`
+      : '') +
+    `<span style="color:var(--muted);font-size:12px;letter-spacing:1px;">APPUIE POUR REJOUER</span>`;
 
-  btnStart.textContent = 'Rejouer';
+  btnStart.textContent = '▶  Rejouer';
   btnStart.disabled = false;
   overlay.classList.remove('hidden');
 }
+
+/* mute toggle */
+btnMute.addEventListener('click', () => {
+  muted = !muted;
+  btnMute.textContent = muted ? '🔇' : '🔊';
+  btnMute.classList.toggle('muted', muted);
+});
 
 btnStart.addEventListener('click', startGame);
 </script>
